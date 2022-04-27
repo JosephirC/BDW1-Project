@@ -18,7 +18,6 @@ CREATE TABLE Etudiant(
    numEtu VARCHAR (10),
    nom VARCHAR (161),
    prenom VARCHAR (161),
-   UE VARCHAR (10),
    PRIMARY KEY(numEtu)
 );
 
