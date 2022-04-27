@@ -1,4 +1,3 @@
-
 /******************************SCRIPT SQL: SCHEMA E/A*******************************/
 /**BON************Enseignant*******************************************/
 CREATE TABLE Enseignant(
@@ -168,109 +167,125 @@ note_finale AS noteFinale, observations AS commentaires,idp AS idp
 FROM donnees_fournies.instances) R
 
 /*********************************Les plus important*****************************/
+
+
+/****Concours*****/
 CREATE TABLE Concours(
-   idC INT,
-   libelleC VARCHAR(50),
-   description VARCHAR(50),
-   prix DECIMAL(15,2),
-   idp INT NOT NULL,
+   idC INT AUTO_INCREMENT,
+   idp BIGINT,
    PRIMARY KEY(idC),
    FOREIGN KEY(idp) REFERENCES Projet(idp)
 );
+INSERT INTO Concours (idp) SELECT * FROM(
+   SELECT DISTINCT idp FROM donnees_fournies.instances)c
 
+
+/**********EquipePedagogique*******/
 CREATE TABLE EquipePedagogique(
+   idEqP INT AUTO_INCREMENT,
    idEns INT,
    PRIMARY KEY(idEns)
 );
+INSERT INTO EquipePedagogique (idEns) SELECT * FROM(
+   SELECT DISTINCT idEns FROM Enseignant)e
 
+/**********Question******SUPPRIME SELECT*FROM ***/
 CREATE TABLE Question(
-   idQuestion VARCHAR(50),
-   libelleQ VARCHAR(50),
-   theme VARCHAR(50),
-   APOGE VARCHAR(50) NOT NULL,
+   idQuestion INT AUTO_INCREMENT,
+   code_apoge VARCHAR(50),
    PRIMARY KEY(idQuestion),
-   FOREIGN KEY(APOGE) REFERENCES UE(APOGE)
+   FOREIGN KEY(code_apoge) REFERENCES UE(code_apoge)
 );
+INSERT INTO Question (code_apoge) SELECT * FROM(
+   SELECT DISTINCT code_apoge FROM donnees_fournies.instances)Q
 
+/*******A REVOIR***Revue*******/
 CREATE TABLE Revue(
    idRevue INT,
    PRIMARY KEY(idRevue)
 );
-
+INSERT INTO Question (code_apoge) SELECT * FROM(
+   SELECT DISTINCT code_apoge FROM donnees_fournies.instances)Q
+   
+/**********Batiment*******/
 CREATE TABLE Batiment(
-   idB INT,
+   idB INT AUTO_INCREMENT,
    PRIMARY KEY(idB)
 );
 
+/**********Salle*******/
 CREATE TABLE Salle(
+   idS INT AUTO_INCREMENT,
    idB INT,
-   idS INT,
    PRIMARY KEY(idB, idS),
    FOREIGN KEY(idB) REFERENCES Batiment(idB)
 );
+INSERT INTO Salle(idB) SELECT * FROM(
+   SELECT DISTINCT idB FROM Batiment)S
 
-CREATE TABLE ElementA(
-   idT VARCHAR(50),
-   texte VARCHAR(50),
-   PRIMARY KEY(idT)
-);
-
+/**********Rapport*******/
 CREATE TABLE Rapport(
-   numJalon INT,
-   titre VARCHAR(50),
-   objectif VARCHAR(50),
-   PRIMARY KEY(numJalon),
-   FOREIGN KEY(numJalon) REFERENCES Jalon(numJalon)
+   rang INT,
+   FOREIGN KEY(rang) REFERENCES Jalon(rang)
 );
+INSERT INTO Salle(rang) SELECT * FROM(
+   SELECT DISTINCT rang FROM Jalon)S
 
+/***A REVOIR*******Avancement*******/
 CREATE TABLE Avancement(
-   numJalon INT,
+   rang INT,
    etat VARCHAR(50),
    idp INT NOT NULL,
    idT VARCHAR(50) NOT NULL,
-   PRIMARY KEY(numJalon),
-   FOREIGN KEY(numJalon) REFERENCES Jalon(numJalon),
+   FOREIGN KEY(rang) REFERENCES Jalon(rang),
    FOREIGN KEY(idp) REFERENCES Projet(idp),
    FOREIGN KEY(idT) REFERENCES ElementA(idT)
 );
+INSERT INTO Avancement(rang, idp, idT) SELECT * FROM(
+   SELECT DISTINCT rang FROM Jalon J JOIN ElementA E ON )S
 
+/****A REVOIR******Questionnaire*******/
 CREATE TABLE Questionnaire(
-   numJalon INT,
+   rang INT,
    theme VARCHAR(50),
    idp INT NOT NULL,
    idQuestion VARCHAR(50) NOT NULL,
-   PRIMARY KEY(numJalon),
-   FOREIGN KEY(numJalon) REFERENCES Jalon(numJalon),
+   FOREIGN KEY(rang) REFERENCES Jalon(rang),
    FOREIGN KEY(idp) REFERENCES Projet(idp),
    FOREIGN KEY(idQuestion) REFERENCES Question(idQuestion)
 );
-
+/*****A REVOIR**********Code*********************/
 CREATE TABLE Code(
-   numJalon INT,
-   qualite VARCHAR(50),
-   idRevue INT NOT NULL,
-   PRIMARY KEY(numJalon),
-   FOREIGN KEY(numJalon) REFERENCES Jalon(numJalon),
+   rang INT,
+   idRevue INT AUTO_INCREMENT,
+   FOREIGN KEY(rang) REFERENCES Jalon(rang),
    FOREIGN KEY(idRevue) REFERENCES Revue(idRevue)
 );
+INSERT INTO Code(rang, idp, idT) SELECT * FROM(
+   SELECT DISTINCT rang FROM Jalon J JOIN ElementA E ON )S
 
+/*****A REVOIR**********Soutenance*********************/
 CREATE TABLE Soutenance(
-   numJalon INT,
+   rang INT,
    titre VARCHAR(50),
    consigne VARCHAR(50),
-   PRIMARY KEY(numJalon),
-   FOREIGN KEY(numJalon) REFERENCES Jalon(numJalon)
+   FOREIGN KEY(rang) REFERENCES Jalon(rang)
 );
-
+/**************comprendre*********************/
 CREATE TABLE comprendre(
-   num_étu INT,
+   numEtu INT,
    idEq INT,
    role VARCHAR(50),
-   PRIMARY KEY(num_étu, idEq),
-   FOREIGN KEY(num_étu) REFERENCES Etudiant(num_étu),
+   PRIMARY KEY(numEtu, idEq),
+   FOREIGN KEY(numEtu) REFERENCES Etudiant(numEtu),
    FOREIGN KEY(idEq) REFERENCES Equipe(idEq)
 );
+INSERT INTO comprendre(numEtu,idEq) SELECT * FROM(
+   SELECT DISTINCT (numEtu,nom_equipe) 
+   FROM Etudiant E JOIN donnees_fournies.instances I
+   WHERE )z
 
+/*****A REVOIR*********constitue*********************/
 CREATE TABLE constitue(
    idEns INT,
    idEns INT,
@@ -278,7 +293,7 @@ CREATE TABLE constitue(
    FOREIGN KEY(idEns) REFERENCES Enseignant(idEns),
    FOREIGN KEY(idEns) REFERENCES EquipePedagogique(idEns)
 );
-
+/****************redige*********************/
 CREATE TABLE redige(
    idEns INT,
    idp INT,
@@ -286,15 +301,18 @@ CREATE TABLE redige(
    FOREIGN KEY(idEns) REFERENCES Enseignant(idEns),
    FOREIGN KEY(idp) REFERENCES Projet(idp)
 );
-
+/****************effectue*********************/
 CREATE TABLE effectue(
    idEq INT,
-   idR INT,
-   PRIMARY KEY(idEq, idR),
+   numReal INT,
    FOREIGN KEY(idEq) REFERENCES Equipe(idEq),
-   FOREIGN KEY(idR) REFERENCES Realisation(idR)
+   FOREIGN KEY(idR) REFERENCES Realisation(numReal)
 );
+INSERT INTO effectue(idEq, numReal)SELECT * FROM(
+   SELECT DISTINCT (idEq, numReal) 
+   FROM Equipe E JOIN Realisation R ON R.idp = E.idp) e
 
+/****************evalue*********************/
 CREATE TABLE evalue(
    idEns INT,
    idr INT,
@@ -303,6 +321,7 @@ CREATE TABLE evalue(
    FOREIGN KEY(idr) REFERENCES Rendu(idr)
 );
 
+/****************evalue*********************/
 CREATE TABLE inscrit(
    num_étu INT,
    APOGE VARCHAR(50),
@@ -315,7 +334,6 @@ CREATE TABLE inscrit(
 
 CREATE TABLE est_cree_de(
    idp INT,
-   idp INT,
    PRIMARY KEY(idp, idp_1),
    FOREIGN KEY(idp) REFERENCES Projet(idp),
    FOREIGN KEY(idp_1) REFERENCES Projet(idp)
@@ -323,14 +341,14 @@ CREATE TABLE est_cree_de(
 
 CREATE TABLE est_affecte(
    idEq INT,
-   numJalon INT,
+   rang INT,
    idB INT,
    dateA DATE,
    horaire TIME,
    lieu VARCHAR(50),
    PRIMARY KEY(idEq, numJalon, idB),
    FOREIGN KEY(idEq) REFERENCES Equipe(idEq),
-   FOREIGN KEY(numJalon) REFERENCES Soutenance(numJalon),
+   FOREIGN KEY(rang) REFERENCES Soutenance(rang),
    FOREIGN KEY(idB) REFERENCES Batiment(idB)
 );
 
@@ -343,4 +361,10 @@ CREATE TABLE declare3(
    FOREIGN KEY(APOGE) REFERENCES UE(APOGE),
    FOREIGN KEY(idp) REFERENCES Projet(idp)
 );
+INSERT INTO 
 
+/**********ElementA*******/
+CREATE TABLE ElementA(
+   idT INT AUTO_INCREMENT,
+   PRIMARY KEY(idT)
+);
