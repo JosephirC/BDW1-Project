@@ -227,7 +227,7 @@ CREATE TABLE Rapport(
    rang INT,
    FOREIGN KEY(rang) REFERENCES Jalon(rang)
 );
-INSERT INTO Salle(rang) SELECT * FROM(
+INSERT INTO Rapport(rang) SELECT * FROM(
    SELECT DISTINCT rang FROM Jalon)S
 
 /***A REVOIR*******Avancement*******/
