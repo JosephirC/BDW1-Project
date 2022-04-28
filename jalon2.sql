@@ -109,19 +109,18 @@ CREATE TABLE Jalon(
    PRIMARY KEY(rang),
    FOREIGN KEY(idp) REFERENCES Projet(idp)
 );
-
 INSERT INTO Jalon (numJalon,libelle,dateLimite,note,idp) SELECT * FROM(
-SELECT DISTINCT 1, jalon1_libelle AS libelle, jalon1_datelimite AS dateLimite, jalon1_note AS note, idp AS idp
+SELECT DISTINCT jalon1_num AS numJalon , jalon1_libelle AS libelle, jalon1_datelimite AS dateLimite, jalon1_note AS note, idp AS idp
 FROM donnees_fournies.instances
 UNION
-SELECT DISTINCT 2 , jalon2_libelle AS libelle, jalon2_datelimite AS dateLimite, jalon2_note AS note, idp AS idp
+SELECT DISTINCT jalon2_num AS numJalon , jalon2_libelle AS libelle, jalon2_datelimite AS dateLimite, jalon2_note AS note, idp AS idp
 FROM donnees_fournies.instances
 UNION
-SELECT DISTINCT 3 , jalon3_libelle AS libelle, jalon3_datelimite AS dateLimite, jalon3_note AS note, idp AS idp
+SELECT DISTINCT jalon3_num AS numJalon , jalon3_libelle AS libelle, jalon3_datelimite AS dateLimite, jalon3_note AS note, idp AS idp
 FROM donnees_fournies.instances
 UNION
-SELECT DISTINCT 4 , jalon4_libelle AS libelle, jalon4_datelimite AS dateLimite, jalon4_note AS note, idp AS idp
-FROM donnees_fournies.instances) J
+SELECT DISTINCT jalon4_num AS numJalon , jalon4_libelle AS libelle, jalon4_datelimite AS dateLimite, jalon4_note AS note, idp AS idp
+FROM donnees_fournies.instances) J Where numJalon IS NOT NULL
 
 /**BON**************Rendu**********************************************************/
 CREATE TABLE Rendu(
