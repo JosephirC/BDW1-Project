@@ -1,9 +1,10 @@
 /******************************SCRIPT SQL: SCHEMA E/A*******************************/
 /**BON************Enseignant*******************************************/
+/**BON************Enseignant*******************************************/
 CREATE TABLE Enseignant(
    idEns INT AUTO_INCREMENT,
-   nom VARCHAR (80),
-   prenom VARCHAR (80),
+   nomEnseignant VARCHAR (80),
+   prenomEnseignant VARCHAR (80),
    PRIMARY KEY(idEns)
 );
 INSERT INTO Enseignant (nomEnseignant,prenomEnseignant) SELECT * FROM(
@@ -110,17 +111,17 @@ CREATE TABLE Jalon(
 );
 
 INSERT INTO Jalon (numJalon,libelle,dateLimite,note,idp) SELECT * FROM(
-SELECT DISTINCT jalon1_num AS numJalon , jalon1_libelle AS libelle, jalon1_datelimite AS dateLimite, jalon1_note AS note, idp AS idp
+SELECT DISTINCT 1, jalon1_libelle AS libelle, jalon1_datelimite AS dateLimite, jalon1_note AS note, idp AS idp
 FROM donnees_fournies.instances
 UNION
-SELECT DISTINCT jalon2_num AS numJalon , jalon2_libelle AS libelle, jalon2_datelimite AS dateLimite, jalon2_note AS note, idp AS idp
+SELECT DISTINCT 2 , jalon2_libelle AS libelle, jalon2_datelimite AS dateLimite, jalon2_note AS note, idp AS idp
 FROM donnees_fournies.instances
 UNION
-SELECT DISTINCT jalon3_num AS numJalon , jalon3_libelle AS libelle, jalon3_datelimite AS dateLimite, jalon3_note AS note, idp AS idp
+SELECT DISTINCT 3 , jalon3_libelle AS libelle, jalon3_datelimite AS dateLimite, jalon3_note AS note, idp AS idp
 FROM donnees_fournies.instances
 UNION
-SELECT DISTINCT jalon4_num AS numJalon , jalon4_libelle AS libelle, jalon4_datelimite AS dateLimite, jalon4_note AS note, idp AS idp
-FROM donnees_fournies.instances) J Where numJalon IS NOT NULL
+SELECT DISTINCT 4 , jalon4_libelle AS libelle, jalon4_datelimite AS dateLimite, jalon4_note AS note, idp AS idp
+FROM donnees_fournies.instances) J
 
 /**BON**************Rendu**********************************************************/
 CREATE TABLE Rendu(
@@ -168,10 +169,10 @@ FROM donnees_fournies.instances) R
 /*********************************Les plus important*****************************/
 
 
-/****Concours*****/
+/**B**Concours*****/
 CREATE TABLE Concours(
    idC INT AUTO_INCREMENT,
-   idp BIGINT,
+   idp BIGINT (20),
    PRIMARY KEY(idC),
    FOREIGN KEY(idp) REFERENCES Projet(idp)
 );
@@ -179,16 +180,13 @@ INSERT INTO Concours (idp) SELECT * FROM(
    SELECT DISTINCT idp FROM donnees_fournies.instances)c
 
 
-/**********EquipePedagogique*******/
+/**B********EquipePedagogique*******/
 CREATE TABLE EquipePedagogique(
    idEqP INT AUTO_INCREMENT,
-   idEns INT,
-   PRIMARY KEY(idEns)
+   PRIMARY KEY(idEqP)
 );
-INSERT INTO EquipePedagogique (idEns) SELECT * FROM(
-   SELECT DISTINCT idEns FROM Enseignant)e
 
-/**********Question******SUPPRIME SELECT*FROM ***/
+/***B*******Question******SUPPRIME SELECT*FROM ***/
 CREATE TABLE Question(
    idQuestion INT AUTO_INCREMENT,
    code_apoge VARCHAR(50),
@@ -198,31 +196,29 @@ CREATE TABLE Question(
 INSERT INTO Question (code_apoge) SELECT * FROM(
    SELECT DISTINCT code_apoge FROM donnees_fournies.instances)Q
 
-/*******A REVOIR***Revue*******/
+/**B*****A REVOIR***Revue*******/
 CREATE TABLE Revue(
-   idRevue INT,
+   idRevue INT AUTO_INCREMENT,
    PRIMARY KEY(idRevue)
 );
-INSERT INTO Question (code_apoge) SELECT * FROM(
-   SELECT DISTINCT code_apoge FROM donnees_fournies.instances)Q
    
-/**********Batiment*******/
+/**B********Batiment*******/
 CREATE TABLE Batiment(
    idB INT AUTO_INCREMENT,
    PRIMARY KEY(idB)
 );
 
-/**********Salle*******/
-CREATE TABLE Salle(
+/***PB*******Salle*******/
+CREATE TABLE Salon(
    idS INT AUTO_INCREMENT,
    idB INT,
-   PRIMARY KEY(idB, idS),
+   PRIMARY KEY(idS),
    FOREIGN KEY(idB) REFERENCES Batiment(idB)
 );
-INSERT INTO Salle(idB) SELECT * FROM(
+INSERT INTO Salon(idB) SELECT * FROM(
    SELECT DISTINCT idB FROM Batiment)S
 
-/**********Rapport*******/
+/***B*******Rapport*******/
 CREATE TABLE Rapport(
    rang INT,
    FOREIGN KEY(rang) REFERENCES Jalon(rang)
@@ -230,46 +226,58 @@ CREATE TABLE Rapport(
 INSERT INTO Rapport(rang) SELECT * FROM(
    SELECT DISTINCT rang FROM Jalon)S
 
-/***A REVOIR*******Avancement*******/
+/***B*******ElementA*******/
+CREATE TABLE ElementA(
+   idT INT AUTO_INCREMENT,
+   PRIMARY KEY(idT)
+);
+
+/***B*******Avancement*******/
 CREATE TABLE Avancement(
    rang INT,
-   etat VARCHAR(50),
-   idp INT NOT NULL,
-   idT VARCHAR(50) NOT NULL,
+   idp BIGINT (20),
+   idT INT,
+   etat VARCHAR(30),
    FOREIGN KEY(rang) REFERENCES Jalon(rang),
    FOREIGN KEY(idp) REFERENCES Projet(idp),
    FOREIGN KEY(idT) REFERENCES ElementA(idT)
 );
-INSERT INTO Avancement(rang, idp, idT) SELECT * FROM(
-   SELECT DISTINCT rang FROM Jalon J JOIN ElementA E ON )S
+INSERT INTO Avancement(rang, idp) SELECT * FROM(
+   SELECT DISTINCT rang FROM Jalon WHERE libelle LIKE '%Avancement%')y
 
-/****A REVOIR******Questionnaire*******/
+/****PB******Questionnaire*******/
 CREATE TABLE Questionnaire(
    rang INT,
    theme VARCHAR(50),
-   idp INT NOT NULL,
-   idQuestion VARCHAR(50) NOT NULL,
+   idp BIGINT (20),
+   idQuestion INT AUTO_INCREMENT,
    FOREIGN KEY(rang) REFERENCES Jalon(rang),
    FOREIGN KEY(idp) REFERENCES Projet(idp),
    FOREIGN KEY(idQuestion) REFERENCES Question(idQuestion)
 );
-/*****A REVOIR**********Code*********************/
+
+INSERT INTO Questionnaire(rang, idp) SELECT * FROM(
+   SELECT DISTINCT rang,idp FROM Jalon WHERE libelle LIKE '%Questionnaire%')d
+
+/*****B**********Code*********************/
 CREATE TABLE Code(
    rang INT,
-   idRevue INT AUTO_INCREMENT,
+   idRevue INT,
    FOREIGN KEY(rang) REFERENCES Jalon(rang),
    FOREIGN KEY(idRevue) REFERENCES Revue(idRevue)
 );
-INSERT INTO Code(rang, idp, idT) SELECT * FROM(
-   SELECT DISTINCT rang FROM Jalon J JOIN ElementA E ON )S
+INSERT INTO Code(rang) SELECT * FROM(
+   SELECT DISTINCT rang FROM Jalon WHERE libelle LIKE '%Revue%')d
 
-/*****A REVOIR**********Soutenance*********************/
+/*****B**********Soutenance*********************/
 CREATE TABLE Soutenance(
    rang INT,
    titre VARCHAR(50),
    consigne VARCHAR(50),
    FOREIGN KEY(rang) REFERENCES Jalon(rang)
 );
+INSERT INTO Soutenance(rang) SELECT * FROM(
+   SELECT DISTINCT rang FROM Jalon WHERE libelle LIKE '%Soutenance%')d
 /**************comprendre*********************/
 CREATE TABLE comprendre(
    numEtu INT,
@@ -280,59 +288,126 @@ CREATE TABLE comprendre(
    FOREIGN KEY(idEq) REFERENCES Equipe(idEq)
 );
 INSERT INTO comprendre(numEtu,idEq) SELECT * FROM(
-   SELECT DISTINCT (numEtu,nom_equipe) 
-   FROM Etudiant E JOIN donnees_fournies.instances I
-   WHERE )z
+SELECT DISTINCT numEtu,nom_equipe 
+   FROM Equipe E, donnees_fournies.instances I, Etudiant e
+   WHERE I.nom_equipe=E.equipe AND e.numEtu IN (
+SELECT DISTINCT etudiant1_numetu AS numEtu
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT etudiant2_numetu AS numEtu
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT etudiant3_numetu AS numEtu
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT etudiant4_numetu AS numEtu
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT etudiant5_numetu AS numEtu
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT etudiant6_numetu AS numEtu
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT etudiant7_numetu AS numEtu
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT etudiant8_numetu AS numEtu
+FROM donnees_fournies.instances)b)
+   
 
-/*****A REVOIR*********constitue*********************/
+/*****B SANS INSERT *********constitue*********************/
 CREATE TABLE constitue(
    idEns INT,
-   idEns INT,
-   PRIMARY KEY(idEns, idEns),
+   idEqP INT,
+   PRIMARY KEY(idEns, idEqP),
    FOREIGN KEY(idEns) REFERENCES Enseignant(idEns),
-   FOREIGN KEY(idEns) REFERENCES EquipePedagogique(idEns)
+   FOREIGN KEY(idEqP) REFERENCES EquipePedagogique(idEqP)
 );
-/****************redige*********************/
+INSERT INTO constitue(idEns,idEqP) SELECT * FROM(
+   SELECT DISTINCT idEns,idEqP FROM EquipePedagogique) q
+/***B sans insert*************redige*********************/
 CREATE TABLE redige(
    idEns INT,
-   idp INT,
+   idp BIGINT (20),
    PRIMARY KEY(idEns, idp),
    FOREIGN KEY(idEns) REFERENCES Enseignant(idEns),
    FOREIGN KEY(idp) REFERENCES Projet(idp)
 );
-/****************effectue*********************/
+INSERT INTO redige(idEns,idp) SELECT * FROM(
+   SELECT DISTINCT idEns,idp FROM Enseignant E JOIN donnees_fournies.instances I ON E.idp) q
+/*****BIEEEEN***********effectue*********************/
 CREATE TABLE effectue(
    idEq INT,
-   numReal INT,
+   numReal BIGINT,
    FOREIGN KEY(idEq) REFERENCES Equipe(idEq),
-   FOREIGN KEY(idR) REFERENCES Realisation(numReal)
+   FOREIGN KEY(numReal) REFERENCES Realisation(numReal)
 );
 INSERT INTO effectue(idEq, numReal)SELECT * FROM(
-   SELECT DISTINCT (idEq, numReal) 
-   FROM Equipe E JOIN Realisation R ON R.idp = E.idp) e
+  SELECT DISTINCT idEq AS idEq, SUBSTRING(titre_realisation,INSTR(titre_realisation,'.')+1, INSTR(titre_realisation,'pour')-6) AS numReal
+FROM donnees_fournies.instances I JOIN p2110758.Equipe E ON E.equipe= I.nom_equipe) e
 
 /****************evalue*********************/
 CREATE TABLE evalue(
    idEns INT,
    idr INT,
-   PRIMARY KEY(idEns, idr),
    FOREIGN KEY(idEns) REFERENCES Enseignant(idEns),
    FOREIGN KEY(idr) REFERENCES Rendu(idr)
 );
+INSERT INTO evalue(idEns,idr) SELECT DISTINCT * FROM (
+   SELECT DISTINCT idEns,idr FROM Enseignant E, donnees_fournies.instances I, Rendu R
+   WHERE E.nomEnseignant = I.ue_responsable_nom OR E.nomEnseignant=I.encadrant_nom 
+    AND R.idp=I.idp)z
 
-/****************evalue*********************/
+
+/****************inscrit*********************/
 CREATE TABLE inscrit(
-   num_étu INT,
+   numEtu INT,
    APOGE VARCHAR(50),
    TD VARCHAR(50),
    TP VARCHAR(50),
-   PRIMARY KEY(num_étu, APOGE),
-   FOREIGN KEY(num_étu) REFERENCES Etudiant(num_étu),
+   PRIMARY KEY(numEtu, APOGE),
+   FOREIGN KEY(numEtu) REFERENCES Etudiant(numEtu),
    FOREIGN KEY(APOGE) REFERENCES UE(APOGE)
 );
+INSERT INTO inscrit(idEns,idr) SELECT DISTINCT * FROM (
+   SELECT DISTINCT idEns,idr FROM Enseignant E, donnees_fournies.instances I, Rendu R
+   
+SELECT DISTINCT SUBSTRING(etudiant1_nomprenom,1, INSTR(etudiant1_nomprenom,';')-1) AS prenom, 
+SUBSTRING(etudiant1_nomprenom,INSTR(etudiant1_nomprenom,';')+1) AS nom
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT SUBSTRING(etudiant2_nomprenom,1, INSTR(etudiant2_nomprenom,';')-1) AS prenom,
+SUBSTRING(etudiant2_nomprenom,INSTR(etudiant2_nomprenom,';')+1) AS nom
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT SUBSTRING(etudiant3_nomprenom,1, INSTR(etudiant3_nomprenom,';')-1) AS prenom,
+SUBSTRING(etudiant3_nomprenom,INSTR(etudiant3_nomprenom,';')+1) AS nom
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT SUBSTRING(etudiant4_nomprenom,1, INSTR(etudiant4_nomprenom,';')-1) AS prenom,
+SUBSTRING(etudiant4_nomprenom,INSTR(etudiant4_nomprenom,';')+1) AS nom
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT SUBSTRING(etudiant5_nomprenom,1, INSTR(etudiant5_nomprenom,';')-1) AS prenom,
+SUBSTRING(etudiant5_nomprenom,INSTR(etudiant5_nomprenom,';')+1) AS nom
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT SUBSTRING(etudiant6_nomprenom,1, INSTR(etudiant6_nomprenom,';')-1) AS prenom,
+SUBSTRING(etudiant6_nomprenom,INSTR(etudiant6_nomprenom,';')+1) AS nom
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT SUBSTRING(etudiant7_nomprenom,1, INSTR(etudiant7_nomprenom,';')-1) AS prenom,
+SUBSTRING(etudiant7_nomprenom,INSTR(etudiant7_nomprenom,';')+1) AS nom
+FROM donnees_fournies.instances
+UNION
+SELECT DISTINCT SUBSTRING(etudiant8_nomprenom,1, INSTR(etudiant8_nomprenom,';')-1) AS prenom,
+SUBSTRING(etudiant8_nomprenom,INSTR(etudiant8_nomprenom,';')+1) AS nom
+FROM donnees_fournies.instances
+
 
 CREATE TABLE est_cree_de(
-   idp INT,
+   idp BIGINT (20),
    PRIMARY KEY(idp, idp_1),
    FOREIGN KEY(idp) REFERENCES Projet(idp),
    FOREIGN KEY(idp_1) REFERENCES Projet(idp)
@@ -350,11 +425,15 @@ CREATE TABLE est_affecte(
    FOREIGN KEY(rang) REFERENCES Soutenance(rang),
    FOREIGN KEY(idB) REFERENCES Batiment(idB)
 );
+INSERT INTO est_affecte (idEq,rang) SELECT * FROM (
+   SELECT DISTINCT idEq,rang FROM Equipe E, Jalon J, donnees_fournies.instances I 
+   WHERE E.equipe = I.nom_equipe AND E.numJalon=I.jalon1_num OR E.numJalon=I.jalon2_num OR E.numJalon=jalon3_num OR E.numJalon=jalon4_num
+)
 
 CREATE TABLE declare3(
    idEns INT,
    APOGE VARCHAR(50),
-   idp INT,
+   idp BIGINT (20),
    PRIMARY KEY(idEns, APOGE, idp),
    FOREIGN KEY(idEns) REFERENCES Enseignant(idEns),
    FOREIGN KEY(APOGE) REFERENCES UE(APOGE),
@@ -362,8 +441,3 @@ CREATE TABLE declare3(
 );
 INSERT INTO 
 
-/**********ElementA*******/
-CREATE TABLE ElementA(
-   idT INT AUTO_INCREMENT,
-   PRIMARY KEY(idT)
-);
