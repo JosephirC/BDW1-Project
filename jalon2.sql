@@ -1,6 +1,6 @@
-/*Creation d'une table Etudiant en utilisant les donnees fournies dans la table 
-instances et on utilise pour "SUBSTRING" pour segmenter 
-le nom et prenom des etudiants ***************************/
+/***********Creation d'une table Etudiant en utilisant les donnees fournies dans la table 
+            instances et on utilise "SUBSTRING" pour segmenter le nom et prenom des etudiants ****************/
+
 CREATE TABLE Etudiant(
    numEtu VARCHAR (10),
    nom VARCHAR (161),
@@ -41,7 +41,9 @@ SELECT DISTINCT etudiant8_numetu AS numEtu, SUBSTRING(etudiant8_nomprenom,1, INS
 SUBSTRING(etudiant8_nomprenom,INSTR(etudiant8_nomprenom,';')+1) AS nom
 FROM donnees_fournies.instances)a WHERE numEtu IS NOT NULL
 
-/**BON************Enseignant*******************************************/
+/***********Creation d'une table Enseignant en utilisant une jointure entre ue_responsable_nom,ue_responsable_prenom,encadrant_nom,
+            encadrant_prenom qui ont été fourni dans la tables donnees fournies.instances ********************************************/
+
 CREATE TABLE Enseignant(
    idEns INT AUTO_INCREMENT,
    nomEnseignant VARCHAR (80),
@@ -55,7 +57,9 @@ UNION
 SELECT DISTINCT encadrant_nom AS nomEncadrant , encadrant_prenom AS prenomEncadrant
 FROM donnees_fournies.instances) R
 
-/******BON**************UE***************************************************/
+
+/***********Creation d'une table UE en utilisant les donnees qui ont été fourni dans la tables donnees fournies.instances en comptant
+            le nombre de projet pour chaque UE **************************************************************************************/
 CREATE TABLE UE(
    code_apoge VARCHAR(50),
    libelle VARCHAR (150),
@@ -72,19 +76,23 @@ SELECT DISTINCT I.code_apoge AS APOGE , I.ue_libelle AS libelle, I.semestre AS s
 FROM donnees_fournies.instances I JOIN Enseignant E ON I.ue_responsable_nom=E.nomEnseignant AND I.ue_responsable_prenom=E.prenomEnseignant
 GROUP BY I.code_apoge) U
 
-/**BON*************Projet******************************************************/
+/*************Creation d'une table UE en utilisant les donnees qui ont été fourni dans la tables donnees fournies.instances 
+                     et on utilise "SUBSTRING" pour segmenter le titre du projet******************************************************/
 CREATE TABLE Projet(
    idp BIGINT (20),
    titre VARCHAR (80),
+   semestre VARCHAR (10),
+	annee SMALLINT,
 	PRIMARY KEY (idp)
 );
 
-INSERT INTO Projet (idp,titre) SELECT * FROM(
-SELECT DISTINCT idp AS idp , SUBSTRING(projet_titre,INSTR(projet_titre,'Projet')+6,length(projet_titre)) AS titre
+INSERT INTO Projet (idp,titre,semestre,annee) SELECT * FROM(
+SELECT DISTINCT idp AS idp , SUBSTRING(projet_titre,INSTR(projet_titre,'Projet')+6,length(projet_titre)) AS titre, semestre AS semestre, annee AS annee
 FROM donnees_fournies.instances) P
 
 
-/**BON****************Jalon**********************************************************/
+/*************Creation d'une table Jalon en utilisant qui ont été fourni dans la tables donnees fournies.instances 
+                     et on utilise "SUBSTRING" pour segmenter le titre du projet******************************************************/
 CREATE TABLE Jalon(
    rang INT AUTO_INCREMENT,
    numJalon BIGINT(6),
@@ -109,7 +117,8 @@ UNION
 SELECT DISTINCT jalon4_num AS numJalon , jalon4_libelle AS libelle, jalon4_datelimite AS dateLimite, jalon4_note AS note, idp AS idp
 FROM donnees_fournies.instances) J Where numJalon IS NOT NULL
 
-/**BON*****************Equipe**************************************************************/
+/*************Creation d'une table Equipe en utilisant qui ont été fourni dans la tables donnees fournies.instances 
+                     et on utilise "SUBSTRING" pour segmenter le titre du projet******************************************************/
 CREATE TABLE Equipe(
    equipe VARCHAR(80),
    idp BIGINT (20),
@@ -124,7 +133,8 @@ FROM donnees_fournies.instances I JOIN Enseignant E
 ON I.encadrant_nom=E.nomEnseignant AND I.encadrant_prenom=E.prenomEnseignant ) Q
 
 
-/**BON**************Realisation**********************************************************/
+/*************Creation d'une table Realisation en utilisant qui ont été fourni dans la tables donnees fournies.instances 
+                     et on utilise "SUBSTRING" pour segmenter le titre **************************************************************/
 CREATE TABLE Realisation(
    numReal BIGINT,
    projet VARCHAR (80),
@@ -144,7 +154,8 @@ SUBSTRING(titre_realisation,INSTR(titre_realisation,'_')+6, length(titre_realisa
 note_finale AS noteFinale, observations AS commentaires,idp AS idp
 FROM donnees_fournies.instances) R
 
-/**BON**************Rendu**********************************************************/
+/*************Creation d'une table Rendu en utilisant UNION pour recuperer tout les 4 rendu de 
+               la tables donnees fournies.instances ******************************************************************************/
 CREATE TABLE Rendu(
    idr INT AUTO_INCREMENT,
    idp BIGINT (20),
@@ -170,69 +181,28 @@ SELECT DISTINCT rendu4_date AS dateR4 , rendu4_note AS noteR4, idp AS idp
 FROM donnees_fournies.instances I ) r
 
 
-/**Bieen**Concours*****/
-CREATE TABLE Concours(
-   idC INT AUTO_INCREMENT,
-   idp BIGINT (20),
-   PRIMARY KEY(idC),
-   FOREIGN KEY(idp) REFERENCES Projet(idp)
-);
-INSERT INTO Concours (idp) SELECT * FROM(
-   SELECT DISTINCT idp FROM donnees_fournies.instances)c
-
-
-/**Bieen********EquipePedagogique*******/
-CREATE TABLE EquipePedagogique(
-   idEqP INT AUTO_INCREMENT,
-   PRIMARY KEY(idEqP)
-);
-
-/**Bieen*****A REVOIR***Revue*******/
-CREATE TABLE Revue(
-   idRevue INT AUTO_INCREMENT,
-   PRIMARY KEY(idRevue)
-);
-
-/***Bieen*******Rapport*******/
-CREATE TABLE Rapport(
-   rang INT,
-   FOREIGN KEY(rang) REFERENCES Jalon(rang)
-);
-INSERT INTO Rapport(rang) SELECT * FROM(
-   SELECT DISTINCT rang FROM Jalon)S
-
-
-/***Bieen*******ElementA*******/
-CREATE TABLE ElementA(
-   idT INT AUTO_INCREMENT,
-   PRIMARY KEY(idT)
-);
-
-/***Bieen*******Avancement*******/
+/*************Creation d'une table Avancement en utilisant la tables donnees fournies.instances et on utilise LIKE
+               qui nous permet de filtrer les Jalons du type Avancement  ***************************************************/
 CREATE TABLE Avancement(
    rang INT,
    idp BIGINT (20),
-   idT INT,
-   etat VARCHAR(30),
    FOREIGN KEY(rang) REFERENCES Jalon(rang),
-   FOREIGN KEY(idp) REFERENCES Projet(idp),
-   FOREIGN KEY(idT) REFERENCES ElementA(idT)
+   FOREIGN KEY(idp) REFERENCES Projet(idp)
 );
-INSERT INTO Avancement(rang, idp) SELECT * FROM(
-   SELECT DISTINCT rang FROM Jalon WHERE libelle LIKE '%Avancement%')y
+INSERT INTO Avancement(rang,idp) SELECT * FROM(
+   SELECT DISTINCT rang,idp FROM Jalon WHERE libelle LIKE '%Avancement%')y
 
-/*****Bieen**********Code*********************/
+/*************Creation d'une table Code en utilisant la tables donnees fournies.instances et on utilise LIKE
+               qui nous permet de filtrer les Jalons du type Revue ***************************************************/
 CREATE TABLE Code(
    rang INT,
-   idRevue INT,
    FOREIGN KEY(rang) REFERENCES Jalon(rang),
-
-   FOREIGN KEY(idRevue) REFERENCES Revue(idRevue)
 );
 INSERT INTO Code(rang) SELECT * FROM(
    SELECT DISTINCT rang FROM Jalon WHERE libelle LIKE '%Revue%')d
 
-/*****Bieen**********Soutenance*********************/
+/*************Creation d'une table Soutenance en utilisant la tables donnees fournies.instances et on utilise LIKE
+               qui nous permet de filtrer les Jalons du type Code ***************************************************/
 CREATE TABLE Soutenance(
    rang INT,
    titre VARCHAR(50),
@@ -243,16 +213,8 @@ INSERT INTO Soutenance(rang) SELECT * FROM(
    SELECT DISTINCT rang FROM Jalon WHERE libelle LIKE '%Soutenance%')d
 
 
-/***********est_cree_de**************/
-CREATE TABLE est_cree_de(
-   idp_1  BIGINT (20),
-   idp BIGINT (20),
-   PRIMARY KEY(idp, idp_1),
-   FOREIGN KEY(idp) REFERENCES Projet(idp),
-   FOREIGN KEY(idp_1) REFERENCES Projet(idp)
-)
-
-/***********est_affecte**************/
+/*************Creation d'une table est_affecte en utilisant la tables donnees fournies.instances
+               pour recuperer les Jalons effectues par chaque Equipe ***************************************************/
 CREATE TABLE est_affecte(
    equipe VARCHAR(80),
    rang INT,
@@ -267,12 +229,11 @@ CREATE TABLE est_affecte(
 INSERT INTO est_affecte (equipe,rang) SELECT * FROM (
    SELECT DISTINCT nom_equipe,rang FROM Jalon J JOIN donnees_fournies.instances I ON I.idp=J.idp )p
 
-/****BIEN************inscrit*********************/
+/*************Creation d'une table inscrit en utilisant la tables donnees fournies.instances pour
+               recuperer les donnes des etudiants inscrits dans chaque UE ***************************************************/
 CREATE TABLE inscrit(
    numEtu VARCHAR (10),
    code_apoge VARCHAR(50),
-   TD VARCHAR(50),
-   TP VARCHAR(50),
    annee smallint,
    semestre VARCHAR(10),
    PRIMARY KEY(numEtu, code_apoge,annee,semestre),
@@ -304,16 +265,8 @@ UNION
 SELECT DISTINCT etudiant8_numetu AS numEtu, code_apoge AS APOGE, semestre AS semestre, annee AS annee
 FROM donnees_fournies.instances)a WHERE numEtu IS NOT NULL
 
-/*****B SANS INSERT *********constitue*********************/
-CREATE TABLE constitue(
-   idEns INT,
-   idEqP VARCHAR(80),
-   PRIMARY KEY(idEns, idEqP),
-   FOREIGN KEY(idEns) REFERENCES Enseignant(idEns),
-   FOREIGN KEY(idEqP) REFERENCES EquipePedagogique(idEqP)
-);
-
-/*** BIEEEEN***********comprendre*********************/
+/*************Creation d'une table comprendre en utilisant la tables donnees fournies.instances 
+               pour recuperer l'equipe de chaque etudiant ***************************************************/
 CREATE TABLE comprendre(
    numEtu VARCHAR (10),
    equipe VARCHAR(80),
@@ -348,7 +301,8 @@ UNION
 SELECT DISTINCT etudiant8_numetu AS numEtu, nom_equipe
 FROM donnees_fournies.instances)A where numEtu IS NOT NULL
 
-/*****BIEEEEN***********effectue*********************/
+/*************Creation d'une table effectue en utilisant la tables donnees fournies.instances et la table equipe 
+               pour recuperer les realisations de chaque equipe en utilisant SUBSTRING pour segmenter le numero de la relaisation *********************/
 CREATE TABLE effectue(
    equipe VARCHAR(80),
    numReal BIGINT,
@@ -357,4 +311,4 @@ CREATE TABLE effectue(
 );
 INSERT INTO effectue(equipe, numReal)SELECT * FROM(
   SELECT DISTINCT equipe AS equipe, SUBSTRING(titre_realisation,INSTR(titre_realisation,'.')+1, INSTR(titre_realisation,'pour')-6) AS numReal
-FROM donnees_fournies.instances I JOIN p2110758.Equipe E ON E.equipe= I.nom_equipe) e
+FROM donnees_fournies.instances I JOIN Equipe E ON E.equipe= I.nom_equipe) e
